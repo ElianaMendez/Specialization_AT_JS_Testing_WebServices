@@ -19,6 +19,17 @@ const bookingPayload = {
     additionalneeds: "Breakfast"
 };
 
+const minimalPayload = {
+    firstname: faker.name.firstName(),
+    lastname: faker.name.lastName(),
+    totalprice: 150,
+    depositpaid: false,
+    bookingdates: {
+        checkin: "2024-02-01",
+        checkout: "2024-02-05"
+    }
+};
+
 describe('Booking API Tests', () => {
 
     beforeAll(async () => {
@@ -49,6 +60,13 @@ describe('Booking API Tests', () => {
         console.log("Booking created with ID:", bookingId);
     });
 
+    test('Create a booking without additional information', async () => {
+        const res = await bookingService.createBooking(minimalPayload);
+
+        expect(res.status).toBe(200);
+        expect(res.body.booking.firstname).toBe(minimalPayload.firstname);
+    });
+
     test('Get booking by ID + Validate Schema', async () => {
         const start = Date.now();
         const res = await bookingService.getBookingById(bookingId);
@@ -59,6 +77,12 @@ describe('Booking API Tests', () => {
         expect(duration).toBeLessThan(2000);                             // TIME
 
         validateSchema(bookingSchema, res.body);
+    });
+
+    test('Get booking IDs filtered by firstname', async () => {
+        const res = await bookingService.getAllBookings('?firstname=John');
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body)).toBe(true);
     });
 
     test('Update booking using token', async () => {
