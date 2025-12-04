@@ -1,5 +1,5 @@
 const request = require('supertest');
-const { BASE_URL } = require('../config/api.config');
+const { BASE_URL, ADMIN_USER, ADMIN_PASS } = require('../config/api.config');
 const { AUTH, BOOKING } = require('../config/endpoints.config');
 
 class BookingService {
@@ -44,7 +44,7 @@ class BookingService {
         const res = await request(BASE_URL)
             .post(AUTH)
             .set('Content-Type', 'application/json')
-            .send({ username: "admin", password: "password123" });
+            .send({ username: ADMIN_USER, password: ADMIN_PASS });
 
         return res.body.token;
     }
