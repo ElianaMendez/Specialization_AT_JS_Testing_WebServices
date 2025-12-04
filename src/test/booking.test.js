@@ -30,94 +30,93 @@ const minimalPayload = {
     }
 };
 
-describe('Booking API Tests', () => {
+describe('These are the Booking API Tests performed for the project', () => {
 
     beforeAll(async () => {
         token = await bookingService.generateToken();
         console.log("Token generated:", token);
     });
 
-    test('Get ALL bookings', async () => {
+    test('Get all bookings', async () => {
         const start = Date.now();
-        const res = await bookingService.getAllBookings();
+        const response = await bookingService.getAllBookings();
         const duration = getResponseTime(start);
 
-        expect(res.status).toBe(200);
-        expect(res.headers['content-type']).toContain('json');
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('json');
+        expect(Array.isArray(response.body)).toBe(true);
         expect(duration).toBeLessThan(2000);
-        expect(Array.isArray(res.body)).toBe(true);
     });
 
-    test('Get booking IDs filtered by firstname', async () => {
-        const res = await bookingService.getAllBookings('?firstname=John');
-        expect(res.status).toBe(200);
-        expect(Array.isArray(res.body)).toBe(true);
+    test('Get booking IDs filtered by first name', async () => {
+        const response = await bookingService.getAllBookings('?firstname=John');
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
     });
 
-    test('GET booking by ID - after creating one, validating schema', async () => {
-        const createRes = await bookingService.createBooking(bookingPayload);
-        bookingId = createRes.body.bookingid;
+    test('GET booking by ID after creating one, then validate the schema.', async () => {
+        const createResponse = await bookingService.createBooking(bookingPayload);
+        bookingId = createResponse.body.bookingid;
 
         const start = Date.now();
-        const res = await bookingService.getBookingById(bookingId);
+        const response = await bookingService.getBookingById(bookingId);
         const duration = getResponseTime(start);
 
-        expect(res.status).toBe(200);
-        expect(res.headers['content-type']).toContain('json');
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('json');
         expect(duration).toBeLessThanOrEqual(2000);
 
-        validateSchema(bookingSchema, res.body);
+        validateSchema(bookingSchema, response.body);
     });
 
     test('Create a new booking', async () => {
         const start = Date.now();
-        const res = await bookingService.createBooking(bookingPayload);
+        const response = await bookingService.createBooking(bookingPayload);
         const duration = getResponseTime(start);
 
-        expect(res.status).toBe(200);
-        expect(res.headers['content-type']).toContain('json');
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('json');
+        expect(response.body.bookingid).toBeDefined();
+        expect(response.body.booking).toBeDefined();
+        expect(response.body.booking.firstname).toBe(bookingPayload.firstname);
         expect(duration).toBeLessThanOrEqual(2000);
-        expect(res.body.bookingid).toBeDefined();
-        expect(res.body.booking).toBeDefined();
-        expect(res.body.booking.firstname).toBe(bookingPayload.firstname);
 
-
-        bookingId = res.body.bookingid;
+        bookingId = response.body.bookingid;
         console.log("Booking created with ID:", bookingId);
     });
 
     test('Create a booking without additional information', async () => {
         const start = Date.now();
-        const res = await bookingService.createBooking(minimalPayload);
+        const response = await bookingService.createBooking(minimalPayload);
         const duration = getResponseTime(start);
 
-        expect(res.status).toBe(200);
-        expect(res.headers['content-type']).toContain('json');
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('json');
+        expect(response.body.bookingid).toBeDefined();
+        expect(response.body.booking.firstname).toBe(minimalPayload.firstname);
         expect(duration).toBeLessThanOrEqual(2000);
-        expect(res.body.bookingid).toBeDefined();
-        expect(res.body.booking.firstname).toBe(minimalPayload.firstname);
 
 
-        bookingId = res.body.bookingid;
+        bookingId = response.body.bookingid;
         console.log("Booking created with ID:", bookingId);
     });
 
-    test('Update firstname of booking using token', async () => {
+    test('Update the first name of a booking using a token', async () => {
         const updatedPayload = { ...bookingPayload, firstname: "New name" };
 
         const start = Date.now();
-        const res = await bookingService.updateBooking(bookingId, token, updatedPayload);
+        const response = await bookingService.updateBooking(bookingId, token, updatedPayload);
         const duration = getResponseTime(start);
 
-        expect(res.status).toBe(200);
-        expect(res.headers['content-type']).toContain('json');
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('json');
+        expect(response.body.firstname).toBe("New name");
         expect(duration).toBeLessThan(2000);
-        expect(res.body.firstname).toBe("New name");
 
-        validateSchema(bookingSchema, res.body);
+        validateSchema(bookingSchema, response.body);
     });
 
-    test('Update checkin of booking using token', async () => {
+    test('Update the check-in date of a booking using a token', async () => {
         const updateCheckinPayload = {
             ...bookingPayload,
             bookingdates: {
@@ -126,28 +125,28 @@ describe('Booking API Tests', () => {
             }
         };
 
-        const res = await bookingService.updateBooking(bookingId, token, updateCheckinPayload);
+        const response = await bookingService.updateBooking(bookingId, token, updateCheckinPayload);
 
-        expect(res.status).toBe(200);
-        expect(res.headers['content-type']).toContain('json');
-        expect(res.body.bookingdates).toBeDefined();
-        expect(res.body.bookingdates.checkin).toBe("2024-05-01");
+        expect(response.status).toBe(200);
+        expect(response.headers['content-type']).toContain('json');
+        expect(response.body.bookingdates).toBeDefined();
+        expect(response.body.bookingdates.checkin).toBe("2024-05-01");
 
-        validateSchema(bookingSchema, res.body);
+        validateSchema(bookingSchema, response.body);
     });
 
-    test('Delete booking', async () => {
+    test('Delete the booking', async () => {
         const start = Date.now();
-        const res = await bookingService.deleteBooking(bookingId, token);
+        const response = await bookingService.deleteBooking(bookingId, token);
         const duration = getResponseTime(start);
 
-        expect([200, 201, 204]).toContain(res.status);
-        expect(res.headers).toBeDefined();
+        expect([200, 201, 204]).toContain(response.status);
+        expect(response.headers).toBeDefined();
         expect(duration).toBeLessThan(2000);
     });
 
-    test("Delete a booking that no longer exists", async () => {
-        const res = await bookingService.deleteBooking(bookingId, token);
-        expect([404, 405]).toContain(res.status);
+    test("Attempt to delete a booking if it no longer exists", async () => {
+        const response = await bookingService.deleteBooking(bookingId, token);
+        expect([404, 405]).toContain(response.status);
     });
 });
